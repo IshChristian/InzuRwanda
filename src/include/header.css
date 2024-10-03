@@ -1,0 +1,7 @@
+.custom-link {
+    color: white; /* Default color */
+  }
+  
+  .custom-link:hover {
+    color: red; /* Hover color */
+  }
