@@ -1,8 +1,11 @@
 // Import necessary libraries
-// import React from 'react';
+import { useState } from 'react';
 import { Bell, MapPin, ChevronDown } from "lucide-react";
 
+
+
 const Navbar = () => {
+
   return (
     <div className="w-full bg-white">
       {/* Navbar */}
@@ -54,6 +57,8 @@ const Navbar = () => {
           <button className="btn btn-primary">Login</button>
         </div>
       </div>
+
+      
 
       {/* Location Filter */}
       <div className="p-4">

@@ -1,19 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Lock, Settings, User, Mail, Phone, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Bell, Lock, Settings, User, Mail, Phone, Check } from 'lucide-react';
+
+// Helper function to get and set cookies
+const getCookie = (name: string) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(";").shift();
+};
+
+const setCookie = (name: string, value: string, days: number = 7) => {
+  const date = new Date();
+  date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); // Expire in 7 days
+  document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=/`;
+};
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const [userDetails, setUserDetails] = useState(null);
   const [accountType, setAccountType] = useState('');
   const [businessRole, setBusinessRole] = useState('');
-  const [userID, setuserID] = useState('');
+  const [userID, setUserID] = useState('');
   const [verificationMethod, setVerificationMethod] = useState('email');
   const [verificationCode, setVerificationCode] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
-  const [activeTab, setActiveTab] = useState('accountType'); // Tabs: accountType, verification, verifyCode
+  const [activeTab, setActiveTab] = useState('accountType');
 
   // Extract email from the URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -38,7 +51,7 @@ export default function ProfilePage() {
         setUserDetails(data);
         setAccountType(data.accountType || '');
         setBusinessRole(data.businessDetails?.businessRole || '');
-        setBusinessRole(data.userID?.userID || '');
+        setUserID(data.userID || '');
       } catch (error) {
         console.error('Error fetching user details:', error);
         alert('Failed to load user details.');
@@ -52,102 +65,100 @@ export default function ProfilePage() {
 
   const handlePostAccountType = async () => {
     try {
-      // Construct the payload
       const payload = {
-        email, // Include the user's email in the payload
+        email,
         accountType,
         ...(accountType === 'business' && { businessRole }), // Add businessRole if accountType is 'business'
       };
-  
-      // Make the PUT request
+
       const response = await fetch('http://localhost:8888/auth/update-business-details', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload), // Convert payload to JSON string
+        body: JSON.stringify(payload),
       });
-  
-      // Handle non-200 responses
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to save account type');
       }
-  
-      // Handle successful response
+
       alert('Account type saved successfully.');
-      setActiveTab('verification'); // Navigate to the verification tab
+      setActiveTab('verification');
     } catch (error) {
       console.error('Error saving account type:', error);
-      // alert('Failed to save account type:', error.message);
     }
   };
-  
+
   const handleGetVerificationCode = async () => {
     try {
       const payload = {
         method: verificationMethod,
         value: verificationMethod === 'email' ? email : phone,
       };
-  
+
       const response = await fetch('http://localhost:8888/auth/send-verification-code', {
-        method: 'POST', // Corrected to POST
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to send verification code');
       }
-  
+
       alert(`Verification code sent via ${verificationMethod}.`);
-      setActiveTab('verifyCode'); // Navigate to the verify code tab
+      setActiveTab('verifyCode');
     } catch (error) {
       console.error('Error sending verification code:', error);
       alert('Failed to send verification code.');
     }
   };
-  
 
   const handleVerifyCode = async () => {
     try {
       const payload = {
-        email,                // Email from the form
-        code: verificationCode,  // Code entered by the user
+        email,
+        code: verificationCode,
       };
-  
-      // Use POST method and send the payload in the request body as JSON
+
       const response = await fetch('http://localhost:8888/auth/verify-code', {
-        method: 'POST',  // Use POST method
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),  // Send the payload as JSON
+        body: JSON.stringify(payload),
       });
-  
+
       if (!response.ok) {
         const responseData = await response.json();
-        if (responseData.error && responseData.error === "Invalid or expired verification code") {
+        if (responseData.error && responseData.error === 'Invalid or expired verification code') {
           alert('The verification code has expired. Please request a new code.');
           return;
         }
         throw new Error('Verification failed');
       }
-  
+
       alert('Verification successful');
-      setIsVerified(true); // Optionally update state
-    navigate('/dashboard');  // Proceed to the next step
+      setIsVerified(true);
+
+      // Save tenantID in cookies based on account type
+      if (accountType === 'personal') {
+        setCookie('tenantID', userID, 7);  // Save tenant ID in cookie for personal account
+        navigate('/home');  // Redirect to home if personal
+      } else if (accountType === 'business') {
+        navigate('/dashboard');  // Redirect to dashboard if business
+      }
     } catch (error) {
       console.error('Error verifying code:', error);
       alert('Verification failed');
+      navigate('/home'); // Redirect to home on failure
     }
   };
-  
-  
-  
-  
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -157,14 +168,6 @@ export default function ProfilePage() {
   }
 
   const renderTabContent = () => {
-    if (loading) {
-      return (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      );
-    }
-
     switch (activeTab) {
       case 'accountType':
         return (

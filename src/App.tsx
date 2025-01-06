@@ -6,10 +6,13 @@ import Login from "./ui-component/login";
 import Register from "./ui-component/register";
 import Auth from "./ui-component/auth";
 import Dashboard from "./components/dashboard";
+import PropertyDetails from "./components/property";
 import Analystic from "./dashboard/pages/analystic";
+import Analyse from "./dashboard/pages/analyse";
 import Property from "./dashboard/pages/property";
 import Booking from "./dashboard/pages/booking";
 import HouseStructurePage from "./dashboard/pages/structure";
+import PropDetails from "./dashboard/pages/propDetails";
 
 // Utility function to get a cookie by name
 const getCookie = (name: string): string | null => {
@@ -46,6 +49,14 @@ const App: React.FC = () => {
             </Home>
           }
         />
+        <Route
+          path="/property/:id"
+          element={
+            <Home>
+              <PropertyDetails />
+            </Home>
+          }
+        />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/auth" element={<Auth />} />
@@ -77,6 +88,16 @@ const App: React.FC = () => {
             <PrivateRoute>
               <Dashboard>
                 <Booking />
+                </Dashboard>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/dashboard/property"
+          element={
+            <PrivateRoute>
+              <Dashboard>
+                <Analyse />
               </Dashboard>
             </PrivateRoute>
           }
@@ -87,6 +108,16 @@ const App: React.FC = () => {
             <PrivateRoute>
               <Dashboard>
                 <HouseStructurePage />
+                </Dashboard>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/dashboard/property"
+          element={
+            <PrivateRoute>
+              <Dashboard>
+                <PropDetails />
               </Dashboard>
             </PrivateRoute>
           }
