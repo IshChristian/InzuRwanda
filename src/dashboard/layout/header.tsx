@@ -1,8 +1,8 @@
 // Import necessary libraries
 // import React from 'react';
-import { Bell, MapPin, ChevronDown } from "lucide-react";
+import { Bell, ChevronDown } from "lucide-react";
 
-const Navbar = () => {
+const Header = () => {
   return (
     <div className="w-full bg-white">
       {/* Navbar */}
@@ -54,35 +54,8 @@ const Navbar = () => {
           <button className="btn btn-primary">Login</button>
         </div>
       </div>
-
-      {/* Location Filter */}
-      <div className="p-4">
-        <div className="bg-white rounded-lg p-2 flex flex-row space-y-4">
-          <div className="flex items-center space-x-4">
-            <MapPin className="text-gray-600" size={24} />
-            <label
-              htmlFor="Username"
-              className="relative block rounded-md border border-gray-200 shadow-sm focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600"
-            >
-              <input
-                type="text"
-                id="Username"
-                className="peer input input-bordered w-full max-w-md border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0"
-                placeholder="Username"
-              />
-
-              <span className="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Username
-              </span>
-            </label>
-            <div className="flex justify-end">
-              <button className="btn btn-primary">search</button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
 
-export default Navbar;
+export default Header;
