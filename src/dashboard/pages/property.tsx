@@ -1,97 +1,87 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from "react";
-import { Plus, X, MapPin, DollarSign, Home, Bed, Bath, Square, Upload, Eye } from 'lucide-react';
-import { motion, AnimatePresence } from "framer-motion";
-
+import type React from "react"
+import { useState, useEffect } from "react"
+import { Plus, X, Home, Eye } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { useNavigate } from "react-router-dom"
+import { useDropzone } from "react-dropzone"
 
 interface Property {
-  title: string;
-  type: string;
-  purpose: string;
-  status: string;
-  price: string;
-  period: string;
+  _id: string
+  title: string
+  type: string
+  purpose: string
+  status: string
+  price: string
+  period: string
   location: {
-    address: string;
-    city: string;
-    state: string;
-    zipCode: string;
-  };
+    address: string
+    city: string
+    state: string
+    zipCode: string
+  }
   details: {
-    area: number;
-    bedroom: number;
-    bathroom: number;
-  };
-  features: string[];
-  images: (File | string)[];
-  description: string;
-  owner: string;
+    area: number
+    bedroom: number
+    bathroom: number
+    parking: number // Added to match backend
+    yearBuilt: number
+  }
+  features: string[]
+  images: string[]
+  description: string
+  owner: string
 }
 
-const getImageUrl = (image: File | string): string => {
-  if (image instanceof File) {
-    return URL.createObjectURL(image);
-  }
-  return typeof image === "string"
-    ? image
-    : "/placeholder.svg?height=300&width=400";
-};
-
-
 const PropertyCard: React.FC<{
-  property: Property;
-  onView: (property: Property) => void;
+  property: Property
+  onView?: (property: Property) => void
 }> = ({ property, onView }) => {
+  const navigate = useNavigate()
+
+  // Property card image display
+  const getImageUrl = (images: string[]) => {
+    return images && images.length > 0
+      ? images[0] // Directly use base64 string
+      : "/placeholder.svg?height=300&width=400"
+  }
+
+  // Format the location string
+  const locationString = property.location
+    ? `${property.location.city}, ${property.location.state}`
+    : "Location not specified"
+
+  // Handle the "View Details" button click
+  const handleViewDetails = () => {
+    if (onView) {
+      onView(property) // Optional callback for custom actions
+    }
+    navigate(`/dashboard/propDetails/${property._id}`) // Navigate to the property details page
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <img 
-        src={getImageUrl(property.images[0])} 
-        alt={property.title} 
+      {/* Display the property image */}
+      <img
+        src={getImageUrl(property.images) || "/placeholder.svg"}
+        alt={property.title}
         className="w-full h-48 object-cover"
+        onError={(e) => {
+          // Fallback to a placeholder if the image fails to load
+          (e.target as HTMLImageElement).src = "/placeholder.svg?height=300&width=400";
+        }}
       />
+      {/* Display the property title and location */}
       <div className="p-4">
-        <h3 className="text-lg font-semibold mb-2">{property.title}</h3>
-        {property.location && (
-          <div className="flex items-center text-sm text-gray-500 mb-2">
-            <MapPin size={16} className="mr-1" />
-            <span>{`${property.location.city}, ${property.location.state}`}</span>
-          </div>
-        )}
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center text-green-600 font-semibold">
-            <DollarSign size={16} className="mr-1" />
-            <span>{property.price}</span>
-            <span className="text-gray-500 font-normal ml-1">/ {property.period}</span>
-          </div>
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-            property.status === 'available' 
-              ? 'bg-green-100 text-green-800'
-              : 'bg-gray-100 text-gray-800'
-          }`}>
-            {property.status}
-          </span>
-        </div>
-        {property.details && (
-          <div className="flex justify-between text-sm text-gray-500">
-            <span className="flex items-center">
-              <Bed size={16} className="mr-1" />
-              {property.details.bedroom}
-            </span>
-            <span className="flex items-center">
-              <Bath size={16} className="mr-1" />
-              {property.details.bathroom}
-            </span>
-            <span className="flex items-center">
-              <Square size={16} className="mr-1" />
-              {property.details.area} sqft
-            </span>
-          </div>
-        )}
+        <h3 className="text-lg font-semibold mb-2">
+          {property.title}, {locationString}
+        </h3>
       </div>
+      {/* "View Details" button */}
       <div className="p-4 pt-0">
-        <button 
-          onClick={() => onView(property)} 
+        <button
+          onClick={handleViewDetails}
           className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300 ease-in-out flex items-center justify-center"
         >
           <Eye size={16} className="mr-2" />
@@ -99,25 +89,23 @@ const PropertyCard: React.FC<{
         </button>
       </div>
     </div>
-  );
-};
-
-
-
-
-
+  )
+}
 
 const AddPropertyForm: React.FC<{
-  onClose: () => void;
-  onSubmit: (property: Property) => void;
+  onClose: () => void
+  onSubmit: (property: Property) => void
 }> = ({ onClose, onSubmit }) => {
   const getUserIdFromCookie = () => {
-    return document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("userID="))
-      ?.split("=")[1] || "";
-  };
-  const [newProperty, setNewProperty] = useState<Property>({
+    return (
+      document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("userID="))
+        ?.split("=")[1] || ""
+    )
+  }
+  const [newProperty, setNewProperty] = useState<Property>(() => ({
+    _id: "",
     title: "",
     type: "commercial",
     purpose: "rent",
@@ -134,46 +122,46 @@ const AddPropertyForm: React.FC<{
       area: 0,
       bedroom: 0,
       bathroom: 0,
+      parking: 0,
+      yearBuilt: 0,
     },
     features: [],
     images: [],
     description: "",
-    owner: getUserIdFromCookie(),
-  });
+    owner: getUserIdFromCookie(), // Lazy initialization
+  }))
 
-  const features = ["elevator", "security", "parking", "wifi", "generator"];
+  const features = ["elevator", "security", "parking", "wifi", "generator"]
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
     setNewProperty((prev) => ({
       ...prev,
       [name]: value,
-    }));
-  };
+    }))
+  }
 
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setNewProperty((prev) => ({
       ...prev,
       location: {
         ...prev.location,
         [name]: value,
       },
-    }));
-  };
+    }))
+  }
 
   const handleDetailsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setNewProperty((prev) => ({
       ...prev,
       details: {
         ...prev.details,
         [name]: Number(value),
       },
-    }));
-  };
+    }))
+  }
 
   const handleFeatureToggle = (feature: string) => {
     setNewProperty((prev) => ({
@@ -181,39 +169,58 @@ const AddPropertyForm: React.FC<{
       features: prev.features.includes(feature)
         ? prev.features.filter((f) => f !== feature)
         : [...prev.features, feature],
-    }));
-  };
+    }))
+  }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-      setNewProperty((prev) => ({
-        ...prev,
-        images: [...prev.images, ...filesArray],
-      }));
-    }
-  };
+  // Image upload method
+  const onDrop = async (acceptedFiles: File[]) => {
+    const base64Images = await Promise.all(
+      acceptedFiles.map((file) => {
+        return new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.readAsDataURL(file)
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = reject
+        })
+      }),
+    )
+    console.log(base64Images);
 
-  const handleRemoveImage = (index: number) => {
     setNewProperty((prev) => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
-  };
+      images: [...prev.images, ...base64Images],
+    }))
+  }
 
+  // Update the handleSubmit function
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const userId = getUserIdFromCookie();
-    if (!userId) return;
-  
-    // Simply pass the form data with owner
-    onSubmit({
+    e.preventDefault()
+
+    const userId = getUserIdFromCookie()
+    if (!userId) {
+      console.error("User ID is missing.")
+      return
+    }
+
+    const formattedProperty = {
       ...newProperty,
-      owner: userId
-    });
-  };
-  
+      price: String(newProperty.price),
+      details: {
+        ...newProperty.details,
+        area: Number(newProperty.details.area) || 0,
+        bedroom: Number(newProperty.details.bedroom) || 0,
+        bathroom: Number(newProperty.details.bathroom) || 0,
+        parking: Number(newProperty.details.parking) || 0,
+        yearBuilt: Number(newProperty.details.yearBuilt) || 0,
+      },
+      images: newProperty.images, // File paths, not base64 strings
+      owner: userId,
+    }
+
+    onSubmit(formattedProperty)
+  }
+
+  const { getRootProps, getInputProps } = useDropzone({ onDrop })
 
   return (
     <motion.div
@@ -231,22 +238,13 @@ const AddPropertyForm: React.FC<{
       >
         <div className="flex justify-between items-start mb-4">
           <h2 className="text-2xl font-bold text-gray-800">Add New Property</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition duration-300 ease-in-out"
-          >
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 transition duration-300 ease-in-out">
             <X size={24} />
           </button>
         </div>
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
-        >
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label
-              htmlFor="title"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
               Title
             </label>
             <input
@@ -260,10 +258,7 @@ const AddPropertyForm: React.FC<{
             />
           </div>
           <div>
-            <label
-              htmlFor="type"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
               Type
             </label>
             <select
@@ -278,10 +273,7 @@ const AddPropertyForm: React.FC<{
             </select>
           </div>
           <div>
-            <label
-              htmlFor="purpose"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="purpose" className="block text-sm font-medium text-gray-700 mb-1">
               Purpose
             </label>
             <select
@@ -296,10 +288,7 @@ const AddPropertyForm: React.FC<{
             </select>
           </div>
           <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
               Status
             </label>
             <select
@@ -314,10 +303,7 @@ const AddPropertyForm: React.FC<{
             </select>
           </div>
           <div>
-            <label
-              htmlFor="price"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
               Price
             </label>
             <input
@@ -331,10 +317,7 @@ const AddPropertyForm: React.FC<{
             />
           </div>
           <div>
-            <label
-              htmlFor="period"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="period" className="block text-sm font-medium text-gray-700 mb-1">
               Period
             </label>
             <select
@@ -349,10 +332,7 @@ const AddPropertyForm: React.FC<{
             </select>
           </div>
           <div>
-            <label
-              htmlFor="address"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
               Address
             </label>
             <input
@@ -366,10 +346,7 @@ const AddPropertyForm: React.FC<{
             />
           </div>
           <div>
-            <label
-              htmlFor="city"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
               City
             </label>
             <input
@@ -383,10 +360,7 @@ const AddPropertyForm: React.FC<{
             />
           </div>
           <div>
-            <label
-              htmlFor="state"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
               State
             </label>
             <input
@@ -400,10 +374,7 @@ const AddPropertyForm: React.FC<{
             />
           </div>
           <div>
-            <label
-              htmlFor="zipCode"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-1">
               Zip Code
             </label>
             <input
@@ -417,10 +388,7 @@ const AddPropertyForm: React.FC<{
             />
           </div>
           <div>
-            <label
-              htmlFor="area"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="area" className="block text-sm font-medium text-gray-700 mb-1">
               Area (sqft)
             </label>
             <input
@@ -434,10 +402,7 @@ const AddPropertyForm: React.FC<{
             />
           </div>
           <div>
-            <label
-              htmlFor="bedroom"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="bedroom" className="block text-sm font-medium text-gray-700 mb-1">
               Bedrooms
             </label>
             <input
@@ -451,10 +416,7 @@ const AddPropertyForm: React.FC<{
             />
           </div>
           <div>
-            <label
-              htmlFor="bathroom"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="bathroom" className="block text-sm font-medium text-gray-700 mb-1">
               Bathrooms
             </label>
             <input
@@ -468,34 +430,28 @@ const AddPropertyForm: React.FC<{
             />
           </div>
           <div className="md:col-span-2">
-    <label
-      htmlFor="features"
-      className="block text-sm font-medium text-gray-700 mb-2"
-    >
-      Features
-    </label>
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-      {features.map((feature) => (
-        <button
-          key={feature}
-          type="button"
-          onClick={() => handleFeatureToggle(feature)}
-          className={`py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 ease-in-out ${
-            newProperty.features.includes(feature)
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          }`}
-        >
-          {feature}
-        </button>
-      ))}
-    </div>
-  </div>
+            <label htmlFor="features" className="block text-sm font-medium text-gray-700 mb-2">
+              Features
+            </label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {features.map((feature) => (
+                <button
+                  key={feature}
+                  type="button"
+                  onClick={() => handleFeatureToggle(feature)}
+                  className={`py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 ease-in-out ${
+                    newProperty.features.includes(feature)
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  {feature}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="md:col-span-2">
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
               Description
             </label>
             <textarea
@@ -509,45 +465,60 @@ const AddPropertyForm: React.FC<{
             ></textarea>
           </div>
           <div className="md:col-span-2">
-            <label
-              htmlFor="images"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="images" className="block text-sm font-medium text-gray-700 mb-1">
               Images
             </label>
-            <div className="flex flex-wrap gap-4">
+
+            <div
+              {...getRootProps()}
+              className="flex flex-wrap gap-4 border-2 border-dashed border-gray-300 p-4 rounded-lg cursor-pointer hover:border-gray-400 transition-colors"
+            >
+              <input {...getInputProps()} id="image-upload" accept="image/*" multiple />
+
               {newProperty.images.map((image, index) => (
                 <div key={index} className="relative group">
                   <img
-                    src={getImageUrl(image)}
+                    src={image || "/placeholder.svg"} // Now using base64 string directly
                     alt={`Uploaded ${index + 1}`}
-                    className="w-full h-20 object-cover rounded-md"
+                    className="w-24 h-24 object-cover rounded-md"
                   />
                   <button
                     type="button"
-                    onClick={() => handleRemoveImage(index)}
-                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition duration-200 ease-in-out"
+                    onClick={() => {
+                      setNewProperty((prev) => ({
+                        ...prev,
+                        images: prev.images.filter((_, i) => i !== index),
+                      }))
+                    }}
+                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition duration-200"
                   >
-                    <X size={16} />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
                 </div>
               ))}
-              <label
-                htmlFor="image-upload"
-                className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors duration-300"
-              >
-                <input
-                  type="file"
-                  id="image-upload"
-                  onChange={handleImageUpload}
-                  multiple
-                  accept="image/*"
-                  className="hidden"
-                />
-                <Upload size={24} className="text-gray-400" />
-              </label>
+
+              <div className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
             </div>
           </div>
+
           <div className="md:col-span-2">
             <button
               type="submit"
@@ -559,94 +530,128 @@ const AddPropertyForm: React.FC<{
         </form>
       </motion.div>
     </motion.div>
-  );
-};
+  )
+}
+
 
 const PropertyPage: React.FC = () => {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [isAdding, setIsAdding] = useState(false);
-  const [viewedProperty, setViewedProperty] = useState<Property | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [properties, setProperties] = useState<Property[]>([])
+  const [isAdding, setIsAdding] = useState(false)
+  const [viewedProperty, setViewedProperty] = useState<Property | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
-    fetchProperties();
-  }, []);
+    fetchProperties()
+  }, [])
 
   const fetchProperties = async () => {
     try {
       const userId = document.cookie
         .split("; ")
         .find((row) => row.startsWith("userID="))
-        ?.split("=")[1];
+        ?.split("=")[1]
 
       if (!userId) {
-        throw new Error("User ID not found");
+        throw new Error("User ID not found")
       }
 
-      setLoading(true);
-      const response = await fetch(`http://localhost:8888/property/find/property/${userId}`);
+      setLoading(true)
+      const response = await fetch(`http://localhost:8888/property/find/property/${userId}`)
       if (!response.ok) {
-        throw new Error("Failed to fetch properties");
+        throw new Error("Failed to fetch properties")
       }
-      const data = await response.json();
-      console.log("Fetched properties:", data);
-      setProperties(data);
+      const data = await response.json()
+
+      // Validate and sanitize the fetched data
+      const sanitizedProperties = data.map((property: any) => ({
+        ...property,
+        location: property.location || {
+          address: "",
+          city: "",
+          state: "",
+          zipCode: "",
+        },
+        details: property.details || {
+          area: 0,
+          bedroom: 0,
+          bathroom: 0,
+        },
+        features: Array.isArray(property.features) ? property.features : [],
+        images: Array.isArray(property.images) ? property.images : [],
+      }))
+
+      setProperties(sanitizedProperties)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch properties");
-      console.error(err);
+      setError(err instanceof Error ? err.message : "Failed to fetch properties")
+      console.error(err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleAddProperty = async (newProperty: Property) => {
     try {
       const userId = document.cookie
         .split("; ")
         .find((row) => row.startsWith("userID="))
-        ?.split("=")[1];
+        ?.split("=")[1]
 
       if (!userId) {
-        setError("User authentication required");
-        return;
+        setError("User authentication required")
+        return
       }
 
       const propertyData = {
         ...newProperty,
-        owner: userId
-      };
+        owner: userId,
+      }
 
-      console.log("Sending property data:", propertyData);
+      console.log(propertyData);
 
+      // Send property data to server
       const response = await fetch("http://localhost:8888/property/new", {
         method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(propertyData)
-      });
+        body: JSON.stringify(propertyData),
+      })
 
-      const responseData = await response.json();
-      
       if (!response.ok) {
-        throw new Error(responseData.error || "Failed to add property");
+        throw new Error("Failed to create property")
       }
 
-      setProperties((prev) => [...prev, responseData]);
-      setIsAdding(false);
-    } catch (err) {
-      console.error("Error:", err);
-      setError(err instanceof Error ? err.message : "Failed to add property");
-    }
-  };
+      const createdProperty = await response.json()
 
-  const filteredProperties = properties.filter(property =>
-    property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    property.location.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    property.location.state.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      // Update properties list and close form
+      setProperties((prev) => [...prev, createdProperty])
+      setIsAdding(false)
+    } catch (err) {
+      console.error("Error:", err)
+      setError(err instanceof Error ? err.message : "Failed to add property")
+    }
+  }
+
+  // Safe property filtering
+  const filteredProperties = properties.filter((property) => {
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      // Safe property title check
+      (property.title || "").toLowerCase().includes(searchLower) ||
+      // Safe location checks
+      (property.location?.city || "")
+        .toLowerCase()
+        .includes(searchLower) ||
+      (property.location?.state || "").toLowerCase().includes(searchLower) ||
+      // Additional search through description
+      (property.description || "")
+        .toLowerCase()
+        .includes(searchLower)
+    )
+  })
+
   return (
     <div className="container mx-auto p-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -668,6 +673,9 @@ const PropertyPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {error && <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">{error}</div>}
+
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
@@ -681,12 +689,8 @@ const PropertyPage: React.FC = () => {
         >
           <div className="text-center">
             <Home className="mx-auto h-12 w-12 text-gray-400" />
-            <h2 className="mt-2 text-xl font-semibold text-gray-900">
-              No Properties Available
-            </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Get started by creating a new property.
-            </p>
+            <h2 className="mt-2 text-xl font-semibold text-gray-900">No Properties Available</h2>
+            <p className="mt-1 text-sm text-gray-500">Get started by creating a new property.</p>
             <motion.div
               className="mt-6"
               initial={{ opacity: 0, y: 10 }}
@@ -707,23 +711,18 @@ const PropertyPage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProperties.map((property, index) => (
-            <PropertyCard
-              key={index + 1}
-              property={property}
-              onView={setViewedProperty}
-            />
+            <PropertyCard key={index + 1} property={property} onView={setViewedProperty} />
           ))}
         </div>
       )}
+
       {viewedProperty && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">{viewedProperty.title}</h2>
-            <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto">
-              {JSON.stringify(viewedProperty, null, 2)}
-            </pre>
-            <button 
-              onClick={() => setViewedProperty(null)} 
+            <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto">{JSON.stringify(viewedProperty, null, 2)}</pre>
+            <button
+              onClick={() => setViewedProperty(null)}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300 ease-in-out"
             >
               Close
@@ -731,16 +730,13 @@ const PropertyPage: React.FC = () => {
           </div>
         </div>
       )}
+
       <AnimatePresence>
-        {isAdding && (
-          <AddPropertyForm
-            onClose={() => setIsAdding(false)}
-            onSubmit={handleAddProperty}
-          />
-        )}
+        {isAdding && <AddPropertyForm onClose={() => setIsAdding(false)} onSubmit={handleAddProperty} />}
       </AnimatePresence>
     </div>
-  );
-};
+  )
+}
 
-export default PropertyPage;
+export default PropertyPage
+
