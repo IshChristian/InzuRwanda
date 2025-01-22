@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, X, MapPin, DollarSign, Home, Bed, Bath, Square, Upload, Eye } from 'lucide-react';
+import { Plus, X, Home, Upload, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from "framer-motion";
-
+import { useNavigate } from 'react-router-dom';
+import { useDropzone } from 'react-dropzone';
 
 interface Property {
+  _id: string;
   title: string;
   type: string;
   purpose: string;
@@ -18,80 +20,85 @@ interface Property {
     state: string;
     zipCode: string;
   };
-  details: {
+  details : {
     area: number;
     bedroom: number;
     bathroom: number;
+    parking: number;    // Added to match backend
+    yearBuilt: number;
   };
   features: string[];
-  images: (File | string)[];
+  images: string[];
   description: string;
   owner: string;
 }
 
-const getImageUrl = (image: File | string): string => {
-  if (image instanceof File) {
-    return URL.createObjectURL(image);
-  }
-  return typeof image === "string"
-    ? image
-    : "/placeholder.svg?height=300&width=400";
-};
-
+// const getImageUrl = (image: File | string): string => {
+//   if (image instanceof File) {
+//     return URL.createObjectURL(image);
+//   }
+//   return typeof image === "string"
+//     ? image
+//     : "/placeholder.svg?height=300&width=400";
+// };
 
 const PropertyCard: React.FC<{
   property: Property;
-  onView: (property: Property) => void;
+  onView?: (property: Property) => void;
 }> = ({ property, onView }) => {
+  const navigate = useNavigate();
+
+  // Function to construct the full image URL
+  const getImageUrl = (images: string) => {
+    // Check if the image path is already a full URL
+    if (images) {
+      return images;
+    }
+    // Construct the full URL using the backend server's URL
+    return `http://localhost:8888${images}`;
+  };
+
+  // Determine the display image: Use the first image or fallback to a placeholder
+  const displayImage =
+    property.images && property.images.length > 0
+      ? getImageUrl(property.images[0])
+      : "/placeholder.svg?height=300&width=400";
+
+  // Format the location string
+  const locationString = property.location
+    ? `${property.location.city}, ${property.location.state}`
+    : "Location not specified";
+
+  // Handle the "View Details" button click
+  const handleViewDetails = () => {
+    if (onView) {
+      onView(property); // Optional callback for custom actions
+    }
+    navigate(`/dashboard/propDetails/${property._id}`); // Navigate to the property details page
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <img 
-        src={getImageUrl(property.images[0])} 
-        alt={property.title} 
+      {/* Display the property image */}
+      <img
+        src={displayImage}
+        alt={property.title}
         className="w-full h-48 object-cover"
+        onError={(e) => {
+          // Fallback to a placeholder if the image fails to load
+          (e.target as HTMLImageElement).src = "/placeholder.svg?height=300&width=400";
+        }}
       />
+      {/* Display the property title and location */}
       <div className="p-4">
-        <h3 className="text-lg font-semibold mb-2">{property.title}</h3>
-        {property.location && (
-          <div className="flex items-center text-sm text-gray-500 mb-2">
-            <MapPin size={16} className="mr-1" />
-            <span>{`${property.location.city}, ${property.location.state}`}</span>
-          </div>
-        )}
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center text-green-600 font-semibold">
-            <DollarSign size={16} className="mr-1" />
-            <span>{property.price}</span>
-            <span className="text-gray-500 font-normal ml-1">/ {property.period}</span>
-          </div>
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-            property.status === 'available' 
-              ? 'bg-green-100 text-green-800'
-              : 'bg-gray-100 text-gray-800'
-          }`}>
-            {property.status}
-          </span>
-        </div>
-        {property.details && (
-          <div className="flex justify-between text-sm text-gray-500">
-            <span className="flex items-center">
-              <Bed size={16} className="mr-1" />
-              {property.details.bedroom}
-            </span>
-            <span className="flex items-center">
-              <Bath size={16} className="mr-1" />
-              {property.details.bathroom}
-            </span>
-            <span className="flex items-center">
-              <Square size={16} className="mr-1" />
-              {property.details.area} sqft
-            </span>
-          </div>
-        )}
+        <h3 className="text-lg font-semibold mb-2">
+          {property.title}, {locationString}
+        </h3>
       </div>
+      {/* "View Details" button */}
       <div className="p-4 pt-0">
-        <button 
-          onClick={() => onView(property)} 
+        <button
+          onClick={handleViewDetails}
           className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300 ease-in-out flex items-center justify-center"
         >
           <Eye size={16} className="mr-2" />
@@ -101,8 +108,6 @@ const PropertyCard: React.FC<{
     </div>
   );
 };
-
-
 
 
 
@@ -117,7 +122,8 @@ const AddPropertyForm: React.FC<{
       .find((row) => row.startsWith("userID="))
       ?.split("=")[1] || "";
   };
-  const [newProperty, setNewProperty] = useState<Property>({
+  const [newProperty, setNewProperty] = useState<Property>(() => ({
+    _id: "",
     title: "",
     type: "commercial",
     purpose: "rent",
@@ -134,12 +140,15 @@ const AddPropertyForm: React.FC<{
       area: 0,
       bedroom: 0,
       bathroom: 0,
+      parking: 0,
+      yearBuilt: 0,
     },
     features: [],
     images: [],
     description: "",
-    owner: getUserIdFromCookie(),
-  });
+    owner: getUserIdFromCookie(), // Lazy initialization
+  }));
+  
 
   const features = ["elevator", "security", "parking", "wifi", "generator"];
 
@@ -184,36 +193,101 @@ const AddPropertyForm: React.FC<{
     }));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-      setNewProperty((prev) => ({
+  
+  const onDrop = async (acceptedFiles: File[]) => {
+    try {
+      // Convert files to base64 and add them to the state
+      const base64Images = await Promise.all(
+        acceptedFiles.map(file => {
+          return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+          });
+        })
+      );
+
+      setNewProperty(prev => ({
         ...prev,
-        images: [...prev.images, ...filesArray],
+        images: [...prev.images, ...base64Images],
       }));
+    } catch (error) {
+      console.error('Error uploading images:', error);
     }
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      try {
+        const uploadedPaths = await Promise.all(
+          files.map(async (file) => {
+            const formData = new FormData();
+            formData.append("image", file);
+  
+            const response = await fetch("http://localhost:8888/upload", {
+              method: "POST",
+              body: formData,
+            });
+  
+            if (!response.ok) {
+              throw new Error(`Failed to upload ${file.name}`);
+            }
+  
+            const data = await response.json();
+            return data.filePath; // Assume server returns the file path
+          })
+        );
+  
+        setNewProperty((prev) => ({
+          ...prev,
+          images: [...prev.images, ...uploadedPaths], // Save file paths in the state
+        }));
+      } catch (error) {
+        console.error("Error uploading images:", error);
+      }
+    }
+  };
+  
+
   const handleRemoveImage = (index: number) => {
-    setNewProperty((prev) => ({
+    setNewProperty(prev => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index),
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const userId = getUserIdFromCookie();
-    if (!userId) return;
-  
-    // Simply pass the form data with owner
-    onSubmit({
-      ...newProperty,
-      owner: userId
-    });
+// Update the handleSubmit function
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const userId = getUserIdFromCookie();
+  if (!userId) {
+    console.error("User ID is missing.");
+    return;
+  }
+
+  const formattedProperty = {
+    ...newProperty,
+    price: String(newProperty.price),
+    details: {
+      ...newProperty.details,
+      area: Number(newProperty.details.area) || 0,
+      bedroom: Number(newProperty.details.bedroom) || 0,
+      bathroom: Number(newProperty.details.bathroom) || 0,
+      parking: Number(newProperty.details.parking) || 0,
+      yearBuilt: Number(newProperty.details.yearBuilt) || 0,
+    },
+    images: newProperty.images, // File paths, not base64 strings
+    owner: userId,
   };
-  
+
+  onSubmit(formattedProperty);
+};
+
+
+const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
   return (
     <motion.div
@@ -509,45 +583,48 @@ const AddPropertyForm: React.FC<{
             ></textarea>
           </div>
           <div className="md:col-span-2">
-            <label
-              htmlFor="images"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Images
-            </label>
-            <div className="flex flex-wrap gap-4">
-              {newProperty.images.map((image, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={getImageUrl(image)}
-                    alt={`Uploaded ${index + 1}`}
-                    className="w-full h-20 object-cover rounded-md"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(index)}
-                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition duration-200 ease-in-out"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              ))}
-              <label
-                htmlFor="image-upload"
-                className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors duration-300"
-              >
-                <input
-                  type="file"
-                  id="image-upload"
-                  onChange={handleImageUpload}
-                  multiple
-                  accept="image/*"
-                  className="hidden"
-                />
-                <Upload size={24} className="text-gray-400" />
-              </label>
-            </div>
-          </div>
+  <label
+    htmlFor="images"
+    className="block text-sm font-medium text-gray-700 mb-1"
+  >
+    Images
+  </label>
+
+  <div {...getRootProps()} className="flex flex-wrap gap-4 border-2 border-dashed border-gray-300 p-4 rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+    <input {...getInputProps()} id="image-upload" accept="image/*" multiple />
+
+    {newProperty.images.map((image, index) => (
+      <div key={index} className="relative group">
+        <img
+          src={image} // Now using base64 string directly
+          alt={`Uploaded ${index + 1}`}
+          className="w-24 h-24 object-cover rounded-md"
+        />
+        <button
+          type="button"
+          onClick={() => {
+            setNewProperty(prev => ({
+              ...prev,
+              images: prev.images.filter((_, i) => i !== index),
+            }));
+          }}
+          className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition duration-200"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    ))}
+
+    <div className="w-24 h-24 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+      </svg>
+    </div>
+  </div>
+</div>
+
           <div className="md:col-span-2">
             <button
               type="submit"
@@ -561,6 +638,7 @@ const AddPropertyForm: React.FC<{
     </motion.div>
   );
 };
+
 
 const PropertyPage: React.FC = () => {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -591,8 +669,26 @@ const PropertyPage: React.FC = () => {
         throw new Error("Failed to fetch properties");
       }
       const data = await response.json();
-      console.log("Fetched properties:", data);
-      setProperties(data);
+      
+      // Validate and sanitize the fetched data
+      const sanitizedProperties = data.map((property: any) => ({
+        ...property,
+        location: property.location || {
+          address: "",
+          city: "",
+          state: "",
+          zipCode: ""
+        },
+        details: property.details || {
+          area: 0,
+          bedroom: 0,
+          bathroom: 0
+        },
+        features: Array.isArray(property.features) ? property.features : [],
+        images: Array.isArray(property.images) ? property.images : []
+      }));
+      
+      setProperties(sanitizedProperties);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch properties");
       console.error(err);
@@ -601,52 +697,91 @@ const PropertyPage: React.FC = () => {
     }
   };
 
-  const handleAddProperty = async (newProperty: Property) => {
-    try {
-      const userId = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("userID="))
-        ?.split("=")[1];
+  // Image upload handling in handleAddProperty
+const handleAddProperty = async (newProperty: Property) => {
+  try {
+    const userId = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("userID="))
+      ?.split("=")[1];
 
-      if (!userId) {
-        setError("User authentication required");
-        return;
-      }
-
-      const propertyData = {
-        ...newProperty,
-        owner: userId
-      };
-
-      console.log("Sending property data:", propertyData);
-
-      const response = await fetch("http://localhost:8888/property/new", {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(propertyData)
-      });
-
-      const responseData = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(responseData.error || "Failed to add property");
-      }
-
-      setProperties((prev) => [...prev, responseData]);
-      setIsAdding(false);
-    } catch (err) {
-      console.error("Error:", err);
-      setError(err instanceof Error ? err.message : "Failed to add property");
+    if (!userId) {
+      setError("User authentication required");
+      return;
     }
-  };
 
-  const filteredProperties = properties.filter(property =>
-    property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    property.location.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    property.location.state.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    // Process images before sending to server
+    const processedImages = await Promise.all(
+      newProperty.images.map(async (imageData, index) => {
+        // If the image is already a URL, return it as is
+        if (imageData.startsWith('http')) {
+          return imageData;
+        }
+        
+        try {
+          // Convert base64 to blob
+          const base64Response = await fetch(imageData);
+          const blob = await base64Response.blob();
+          
+          // Generate timestamp for unique image name
+          const timestamp = new Date().getTime();
+          // Create a unique image name with format
+          const imageName = `property_${userId}_${timestamp}_${index}.jpg`;
+          
+          // Create FormData and append the image with the new name
+          const formData = new FormData();
+          formData.append('image', blob, imageName);
+
+          // Upload the image
+          const uploadResponse = await fetch('http://localhost:8888/upload', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!uploadResponse.ok) {
+            throw new Error('Failed to upload image');
+          }
+
+          const { imagePath } = await uploadResponse.json();
+          // Return just the image name/path
+          return imagePath; // This will be something like "property_123_1234567890_0.jpg"
+        } catch (error) {
+          console.error('Error processing image:', error);
+          return null;
+        }
+      })
+    );
+
+    // Filter out any failed uploads
+    const validImages = processedImages.filter(path => path !== null);
+
+    const propertyData = {
+      ...newProperty,
+      owner: userId,
+      images: validImages // These will be image paths/names
+    };
+
+    // Rest of the property creation code...
+  } catch (err) {
+    console.error("Error:", err);
+    setError(err instanceof Error ? err.message : "Failed to add property");
+  }
+};
+
+  // Safe property filtering
+  const filteredProperties = properties.filter(property => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      // Safe property title check
+      (property.title || "").toLowerCase().includes(searchLower) ||
+      // Safe location checks
+      (property.location?.city || "").toLowerCase().includes(searchLower) ||
+      (property.location?.state || "").toLowerCase().includes(searchLower) ||
+      // Additional search through description
+      (property.description || "").toLowerCase().includes(searchLower)
+    );
+  });
+
   return (
     <div className="container mx-auto p-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -668,6 +803,13 @@ const PropertyPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
+          {error}
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
@@ -715,6 +857,7 @@ const PropertyPage: React.FC = () => {
           ))}
         </div>
       )}
+
       {viewedProperty && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -731,6 +874,7 @@ const PropertyPage: React.FC = () => {
           </div>
         </div>
       )}
+
       <AnimatePresence>
         {isAdding && (
           <AddPropertyForm
