@@ -10,7 +10,7 @@ const RentalDashboard: React.FC = () => {
     { icon: Home, label: 'Properties', path: "#" },
     { icon: Inbox, label: 'Bookings', path: "#" },
     { icon: Inbox, label: 'Property', path: "/dashboard/property" },
-    { icon: BarChart2, label: 'Analytics', path: "#" },
+    { icon: BarChart2, label: 'Analytics', path: "/dashboard/analystic" },
     { icon: Settings, label: 'Settings', path: "#" },
     { icon: LogOut, label: 'Logout', path: "#" },
   ]

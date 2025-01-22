@@ -20,17 +20,17 @@ const Register: React.FC = () => {
     document.cookie = `${name}=${value};${expires};path=/`;
   };
 
-  // Helper function to get a cookie
-  const getCookie = (name: string): string | null => {
-    const cookies = document.cookie.split('; ');
-    for (const cookie of cookies) {
-      const [key, value] = cookie.split('=');
-      if (key === name) {
-        return value;
-      }
-    }
-    return null;
-  };
+  // // Helper function to get a cookie
+  // const getCookie = (name: string): string | null => {
+  //   const cookies = document.cookie.split('; ');
+  //   for (const cookie of cookies) {
+  //     const [key, value] = cookie.split('=');
+  //     if (key === name) {
+  //       return value;
+  //     }
+  //   }
+  //   return null;
+  // };
 
   const handleSubmit = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
