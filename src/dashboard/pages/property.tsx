@@ -67,6 +67,10 @@ const PropertyCard: React.FC<{
         src={getImageUrl(property.images) || "/placeholder.svg"}
         alt={property.title}
         className="w-full h-48 object-cover"
+        onError={(e) => {
+          // Fallback to a placeholder if the image fails to load
+          (e.target as HTMLImageElement).src = "/placeholder.svg?height=300&width=400";
+        }}
       />
       {/* Display the property title and location */}
       <div className="p-4">
@@ -528,6 +532,7 @@ const AddPropertyForm: React.FC<{
     </motion.div>
   )
 }
+
 
 const PropertyPage: React.FC = () => {
   const [properties, setProperties] = useState<Property[]>([])
