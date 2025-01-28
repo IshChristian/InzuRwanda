@@ -8,7 +8,7 @@ const RentalDashboard: React.FC = () => {
 
   const menuItems = [
     { icon: Home, label: 'Properties', path: "#" },
-    { icon: Inbox, label: 'Bookings', path: "#" },
+    { icon: Inbox, label: 'Bookings', path: "/dashboard/booking" },
     { icon: Inbox, label: 'Property', path: "/dashboard/property" },
     { icon: BarChart2, label: 'Analytics', path: "#" },
     { icon: Settings, label: 'Settings', path: "#" },
