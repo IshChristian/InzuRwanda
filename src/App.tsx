@@ -7,6 +7,7 @@ import Register from "./ui-component/register";
 import Auth from "./ui-component/auth";
 import Dashboard from "./components/dashboard";
 import PropertyDetails from "./components/property";
+import Booking from "./components/booking";
 import Analystic from "./dashboard/pages/analystic";
 import Analyse from "./dashboard/pages/analyse";
 import Property from "./dashboard/pages/property";
@@ -52,6 +53,14 @@ const App: React.FC = () => {
           element={
             <Home>
               <PropertyDetails />
+            </Home>
+          }
+        />
+        <Route
+          path="/booking"
+          element={
+            <Home>
+              <Booking />
             </Home>
           }
         />

@@ -148,14 +148,14 @@ export default function ProfilePage() {
       // Save tenantID in cookies based on account type
       if (accountType === 'personal') {
         setCookie('tenantID', userID, 7);  // Save tenant ID in cookie for personal account
-        navigate('/home');  // Redirect to home if personal
+        navigate('/');  // Redirect to home if personal
       } else if (accountType === 'business') {
         navigate('/dashboard');  // Redirect to dashboard if business
       }
     } catch (error) {
       console.error('Error verifying code:', error);
       alert('Verification failed');
-      navigate('/home'); // Redirect to home on failure
+      navigate('/login'); // Redirect to home on failure
     }
   };
 
