@@ -1,93 +1,86 @@
-// Import necessary libraries
-import { useState } from 'react';
-import { Bell, MapPin, ChevronDown } from "lucide-react";
+import React, { useState } from "react"
+import { useLocation, Link } from "react-router-dom"
+import { MapPin, Map, Building2, Home, Hotel, Building } from "lucide-react"
+import LanguageSelector from "./language"
+import ProfileMenu from "./profiledropdown"
 
-
-
-const Navbar = () => {
+const Navbar: React.FC = () => {
+  const { pathname } = useLocation()
+  const [location, setLocation] = useState("")
+  const [city, setCity] = useState("")
 
   return (
-    <div className="w-full bg-white">
-      {/* Navbar */}
-      <div className="navbar px-4 lg:px-10 flex justify-between items-center">
-        {/* Left: Project Name */}
-        <div className="text-2xl font-bold text-gray-800 antialiased">LiveAtRwanda</div>
-
-        {/* Center: Menu */}
-        <div className="flex space-x-4">
-          <a className="text-gray-600 hover:text-gray-800" href="#">
-            Home
-          </a>
-          <a className="text-gray-600 hover:text-gray-800" href="#">
-            About
-          </a>
-          {/* Dropdown Menu */}
-          <div className="dropdown dropdown-hover">
-            <label
-              tabIndex={0}
-              className="text-gray-600 hover:text-gray-800 cursor-pointer flex items-center"
-            >
-              Services <ChevronDown className="ml-1" size={16} />
-            </label>
-            <ul
-              tabIndex={0}
-              className="dropdown-content menu p-2 shadow bg-white rounded-box w-52"
-            >
-              <li>
-                <a href="#">Service 1</a>
-              </li>
-              <li>
-                <a href="#">Service 2</a>
-              </li>
-              <li>
-                <a href="#">Service 3</a>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Right: Notification and Login */}
-        <div className="flex items-center space-x-4">
-          <button className="relative">
-            <Bell className="text-gray-600 hover:text-gray-800" size={24} />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-              3
-            </span>
-          </button>
-          <button className="btn btn-primary">Login</button>
-        </div>
-      </div>
-
-      
-
-      {/* Location Filter */}
-      <div className="p-4">
-        <div className="bg-white rounded-lg p-2 flex flex-row space-y-4">
-          <div className="flex items-center space-x-4">
-            <MapPin className="text-gray-600" size={24} />
-            <label
-              htmlFor="Username"
-              className="relative block rounded-md border border-gray-200 shadow-sm focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600"
-            >
-              <input
-                type="text"
-                id="Username"
-                className="peer input input-bordered w-full max-w-md border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0"
-                placeholder="Username"
-              />
-
-              <span className="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Username
-              </span>
-            </label>
-            <div className="flex justify-end">
-              <button className="btn btn-primary">search</button>
+    <nav className="top-0 left-0 right-0 z-50 bg-white shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col">
+          {/* Top Section */}
+          <div className="flex items-center justify-between h-16">
+            <div className="flex-1 flex items-center">
+              <Link
+                to="/"
+                className="text-2xl font-medium text-blue-800 hover:text-zinc-600 transition-colors duration-200"
+              >
+                LiveAtRwanda
+              </Link>
+            </div>
+            <div className="flex items-center gap-6">
+              <LanguageSelector />
+              <ProfileMenu />
             </div>
           </div>
+
+          {/* Bottom Section - Only show on homepage */}
+          {pathname === "/" && (
+            <div className="flex justify-between items-center py-2 border-t">
+              {/* Left side - Map icons */}
+              <div className="flex items-center gap-6">
+                <button className="flex items-center gap-2 text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer">
+                  <MapPin className="h-5 w-5" />
+                  <input
+              type="text"
+              placeholder="address"
+              className="input input-bordered w-full max-w-xs"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+            />
+                </button>
+                <button className="flex items-center gap-2 text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer">
+                  <Map className="h-5 w-5" />
+                  <input
+              type="text"
+              placeholder="city"
+              className="input input-bordered w-full max-w-xs"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+            />
+                </button>
+              </div>
+
+              {/* Right side - Accommodation types */}
+              <div className="flex items-center gap-6">
+                <button className="flex flex-col items-center gap-1 text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer">
+                  <Home className="h-5 w-5" />
+                  <span className="text-xs">House</span>
+                </button>
+                <button className="flex flex-col items-center gap-1 text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer">
+                  <Building2 className="h-5 w-5" />
+                  <span className="text-xs">Apartment</span>
+                </button>
+                <button className="flex flex-col items-center gap-1 text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer">
+                  <Building className="h-5 w-5" />
+                  <span className="text-xs">Guest House</span>
+                </button>
+                <button className="flex flex-col items-center gap-1 text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer">
+                  <Hotel className="h-5 w-5" />
+                  <span className="text-xs">Hotel</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-    </div>
-  );
-};
+    </nav>
+  )
+}
 
-export default Navbar;
+export default Navbar

@@ -1,17 +1,23 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Home from "./components/home";
-import Index from "./components/index";
 import Login from "./ui-component/login";
 import Register from "./ui-component/register";
 import Auth from "./ui-component/auth";
+import Payment from "./ui-component/payment";
+import Message from "./ui-component/message";
+import Rent from "./ui-component/rentdetails";
+
+
+import Home from "./components/home";
+import Index from "./components/index";
 import Dashboard from "./components/dashboard";
 import PropertyDetails from "./components/property";
+
+
 import Analystic from "./dashboard/pages/analystic";
 import Analyse from "./dashboard/pages/analyse";
 import Property from "./dashboard/pages/property";
 import Booking from "./dashboard/pages/booking";
-import HouseStructurePage from "./dashboard/pages/structure";
 import PropDetails from "./dashboard/pages/propDetails";
 
 // Utility function to get a cookie by name
@@ -57,6 +63,30 @@ const App: React.FC = () => {
             </Home>
           }
         />
+        <Route
+          path="/payment"
+          element={
+            <Home>
+              <Payment />
+            </Home>
+          }
+        />
+        <Route
+          path="/message"
+          element={
+            <Home>
+              <Message />
+            </Home>
+          }
+        />
+        <Route
+          path="/rent-details"
+          element={
+            <Home>
+              <Rent />
+            </Home>
+          }
+        />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/auth" element={<Auth />} />
@@ -93,22 +123,12 @@ const App: React.FC = () => {
           }
         />
         <Route
-          path="/dashboard/property"
+          path="/dashboard/analyse"
           element={
             <PrivateRoute>
               <Dashboard>
                 <Analyse />
               </Dashboard>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/dashboard/structure"
-          element={
-            <PrivateRoute>
-              <Dashboard>
-                <HouseStructurePage />
-                </Dashboard>
             </PrivateRoute>
           }
         />
