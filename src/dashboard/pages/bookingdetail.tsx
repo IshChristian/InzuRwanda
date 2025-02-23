@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { MapPin, User, Mail, Phone, Check, X, Clock, Calendar, CreditCard } from 'lucide-react';
 
-// Define types for the data
+// Update types to match the API response
 interface Location {
   address: string;
   city: string;
@@ -24,7 +24,6 @@ interface Property {
 
 interface Booking {
   _id: string;
-  tenant: Tenant;
   property: string;
   status: string;
   startDate: string;
@@ -33,21 +32,22 @@ interface Booking {
 }
 
 interface ApiResponse {
-  tenantIds?: Tenant[];
-  bookings?: Booking[];
+  tenantIds: Tenant[];
+  bookings: Booking[];
 }
 
 const PropertyDetails = () => {
   const { id } = useParams<{ id: string }>();
   const [property, setProperty] = useState<Property | null>(null);
   const [booking, setBooking] = useState<Booking | null>(null);
+  const [tenant, setTenant] = useState<Tenant | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalAction, setModalAction] = useState<'confirm' | 'cancel' | 'pending' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
-      const response = await fetch(`http://localhost:8888/booking/bookingid/${id}`);
+      const response = await fetch(`http://localhost:8888/booking/tenantid/${id}`);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
@@ -56,15 +56,18 @@ const PropertyDetails = () => {
       console.log('API Response:', data);
 
       // Validate the API response
-      if (!data.bookings || data.bookings.length === 0) {
-        throw new Error('No bookings found');
+      if (!data.bookings || data.bookings.length === 0 || !data.tenantIds || data.tenantIds.length === 0) {
+        throw new Error('No bookings or tenant information found');
       }
 
-      // Use the first booking in the response
-      const firstBooking = data.bookings[0];
+      // Set tenant information from tenantIds array
+      setTenant(data.tenantIds[0]);
+      
+      // Set booking information
+      setBooking(data.bookings[0]);
 
       // Fetch property details using the property ID from the booking
-      const propertyResponse = await fetch(`http://localhost:8888/property/find/${firstBooking.property}`);
+      const propertyResponse = await fetch(`http://localhost:8888/property/find/${data.bookings[0].property}`);
       if (!propertyResponse.ok) {
         throw new Error(`HTTP error! Status: ${propertyResponse.status}`);
       }
@@ -73,20 +76,20 @@ const PropertyDetails = () => {
       console.log('Property Response:', propertyData);
 
       setProperty(propertyData);
-      setBooking(firstBooking);
-      setError(null); // Clear any previous errors
+      setError(null);
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('Failed to fetch data. Please try again later.');
       setProperty(null);
       setBooking(null);
+      setTenant(null);
     }
   };
 
   // Fetch data from the API based on the `id`
   useEffect(() => {
     fetchData();
-  }, [id]); // Re-fetch data when `id` changes
+  }, [id]);
 
   // Handle Accept button click
   const handleAccept = () => {
@@ -177,7 +180,7 @@ const PropertyDetails = () => {
     return <div className="p-6 text-center text-red-500">{error}</div>;
   }
 
-  if (!property || !booking) {
+  if (!property || !booking || !tenant) {
     return <div className="p-6 text-center">Loading...</div>;
   }
 
@@ -199,15 +202,15 @@ const PropertyDetails = () => {
             <h2 className="text-lg font-bold text-gray-800 mb-2">Tenant Information</h2>
             <div className="flex items-center text-gray-600 mb-2">
               <User className="w-5 h-5 mr-2" />
-              <span>Name: {booking.tenant.name}</span>
+              <span>Name: {tenant.name}</span>
             </div>
             <div className="flex items-center text-gray-600 mb-2">
               <Mail className="w-5 h-5 mr-2" />
-              <span>Email: {booking.tenant.email}</span>
+              <span>Email: {tenant.email}</span>
             </div>
             <div className="flex items-center text-gray-600 mb-4">
               <Phone className="w-5 h-5 mr-2" />
-              <span>Phone: {booking.tenant.phone}</span>
+              <span>Phone: {tenant.phone}</span>
             </div>
 
             {/* Check-in and Check-out */}

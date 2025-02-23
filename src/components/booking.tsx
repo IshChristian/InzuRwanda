@@ -7,7 +7,7 @@ interface BookingProps {
 }
 
 interface BookingType {
-  id: string;
+  _id: string;
   property: string; // Property ID to fetch details
   propertyName: string;
   location?: { address: string; city: string; state: string }; // Properly structured location
@@ -45,23 +45,23 @@ const Booking = () => {
       try {
         const response = await fetch(`http://localhost:8888/booking/tenant/${tenantID}`);
         const data: BookingType[] = await response.json();
-
-        // Fetch property details for missing location or price
+  
+        console.log("Fetched booking data:", data); // Debugging log
+  
         const enrichedBookings = await Promise.all(
           data.map(async (booking) => {
+            if (!booking.id) {
+              console.warn("Booking ID is missing in API response:", booking);
+            }
             if (!booking.location || booking.price === undefined) {
               try {
                 const propertyResponse = await fetch(`http://localhost:8888/property/find/${booking.property}`);
                 const propertyData: PropertyType = await propertyResponse.json();
                 return {
                   ...booking,
-                  location: {
-                    address: propertyData.location.address,
-                    city: propertyData.location.city,
-                    state: propertyData.location.state,
-                  },
+                  location: propertyData.location,
                   price: propertyData.price,
-                  propertyName: propertyData.title, // Ensuring latest property name
+                  propertyName: propertyData.title,
                 };
               } catch (error) {
                 console.error("Error fetching property details:", error);
@@ -70,25 +70,35 @@ const Booking = () => {
             return booking;
           })
         );
-
-        setBookings(enrichedBookings.filter(Boolean)); // Remove any failed fetches (null values)
+  
+        setBookings(enrichedBookings.filter(Boolean)); // Remove undefined values
       } catch (error) {
         console.error("Error fetching bookings:", error);
       }
     };
+  
+    if (tenantID) {
+      fetchBookings();
+    }
+  }, [tenantID]);
+  
 
-    fetchBookings();
-  }, []);
 
   return (
     <div className="container mx-auto p-4 space-y-4">
       <h1 className="text-2xl font-bold mb-6">My Bookings</h1>
       <div className="space-y-4">
-        {bookings.map((booking) => (
+        {bookings.map((booking, index) => (
           <div
-            key={booking.id}
+            key={index}
             className="w-full rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => navigate(`/payment/${booking.id}`)}
+            onClick={() => {
+              if (!booking._id) {
+                console.error("Booking ID is missing:", booking);
+                return; // Prevent navigation if ID is missing
+              }
+              navigate(`/payment/${booking._id}`);
+            }}
           >
             <div className="p-6">
               <div className="flex justify-between items-start">

@@ -66,7 +66,7 @@ const App: React.FC = () => {
           }
         />
         <Route
-          path="/payment"
+          path="/payment/:id"
           element={
             <Home>
               <Payment />

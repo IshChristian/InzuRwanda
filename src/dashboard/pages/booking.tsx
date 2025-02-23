@@ -266,7 +266,7 @@ const BookingDashboard: React.FC = () => {
     // Find the booking by ID
     const booking = bookings.find((b) => b._id === bookingId);
     if (booking && booking.tenant) {
-      navigate(`/dashboard/booking-detail/${booking.tenant}`); // Use tenant ID for navigation
+      navigate(`/dashboard/booking-detail/${booking.tenant}`);
     } else {
       console.error("Booking or tenant not found.");
     }
