@@ -1,50 +1,61 @@
-# React + TypeScript + Vite
+# InzuRwanda
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+InzuRwanda is a project designed to simplify the process of finding, listing, and managing real estate properties in Rwanda. Whether you are a buyer, seller, or renter, InzuRwanda provides a user-friendly platform to explore and connect with property opportunities efficiently.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Property Listings**: Browse a comprehensive list of properties for sale or rent across Rwanda.
+- **Advanced Search**: Filter properties based on location, price, type, and amenities.
+- **User Profiles**: Create and manage your listings as a buyer, seller, or agent.
+- **Interactive Map**: View properties on an interactive map to find the best locations.
+- **Secure Transactions**: Ensure safe communication and transactions through our verified system.
+- **Owner Property Panel**: A dedicated panel for property owners to manage their listings efficiently.
 
-## Expanding the ESLint configuration
+## Installation
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+To set up the project locally, follow these steps:
 
-- Configure the top-level `parserOptions` property like this:
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/yourusername/inzurwanda.git
+   ```
+2. Navigate into the project directory:
+   ```sh
+   cd inzurwanda
+   ```
+3. Install dependencies:
+   ```sh
+   npm install  # If using Node.js
+   ```
+4. Start the development server:
+   ```sh
+   npm start  # For a frontend application
+   ```
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## Technologies Used
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+- **Frontend**: React.js with Tailwind CSS
+- **Backend**: Node.js / Express.js
+- **Database**: MongoDB
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+## Contribution
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+We welcome contributions! Follow these steps to contribute:
+
+1. Fork the repository.
+2. Create a new branch (`feature-branch`).
+3. Make your changes and commit them.
+4. Push to your fork and submit a pull request.
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for more details.
+
+## Contact
+
+For any inquiries or support, contact us at [your-email@example.com].
+
+---
+
+Happy coding! 🚀
+
