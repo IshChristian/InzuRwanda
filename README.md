@@ -17,11 +17,11 @@ To set up the project locally, follow these steps:
 
 1. Clone the repository:
    ```sh
-   git clone https://github.com/yourusername/inzurwanda.git
+   git clone https://github.com/IshChristian/InzuRwanda.git
    ```
 2. Navigate into the project directory:
    ```sh
-   cd inzurwanda
+   cd InzuRwanda
    ```
 3. Install dependencies:
    ```sh
@@ -29,12 +29,12 @@ To set up the project locally, follow these steps:
    ```
 4. Start the development server:
    ```sh
-   npm start  # For a frontend application
+   npm run dev  # For a frontend application
    ```
 
 ## Technologies Used
 
-- **Frontend**: React.js with Tailwind CSS
+- **Frontend**: Vite + React with Tailwind CSS
 - **Backend**: Node.js / Express.js
 - **Database**: MongoDB
 
